@@ -75,7 +75,7 @@ const ensureAdminUser = async () => {
   const adminEmail = "dujao@focusos.net";
 
   try {
-    const results: any = await db.sql("SELECT * FROM users WHERE username = ?", [adminUsername]);
+    const results: any = await db.sql`SELECT * FROM users WHERE username = ${adminUsername}`;
     const existingAdmin = results[0];
 
     if (!existingAdmin) {
@@ -83,13 +83,13 @@ const ensureAdminUser = async () => {
       const id = "admin-dujao";
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
       
-      await db.sql("INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)", [id, adminUsername, adminEmail, hashedPassword]);
+      await db.sql`INSERT INTO users (id, username, email, password_hash) VALUES (${id}, ${adminUsername}, ${adminEmail}, ${hashedPassword})`;
 
       // Initial Seed For Admin
       const p1Id = "p1-" + id;
-      await db.sql("INSERT INTO projects (id, userId, name, color, description, lastAccessed) VALUES (?, ?, ?, ?, ?, ?)", [p1Id, id, "Sistema Central", "#6366f1", "Gestão principal da FocusOS.", new Date().toISOString()]);
+      await db.sql`INSERT INTO projects (id, userId, name, color, description, lastAccessed) VALUES (${p1Id}, ${id}, "Sistema Central", "#6366f1", "Gestão principal da FocusOS.", ${new Date().toISOString()})`;
 
-      await db.sql("INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ["t1-" + id, p1Id, id, "Configuração Inicial", "Finalizar setup do servidor e banco de dados.", "urgent", 60, new Date().toISOString(), "completed", 10]);
+      await db.sql`INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (${"t1-" + id}, ${p1Id}, ${id}, "Configuração Inicial", "Finalizar setup do servidor e banco de dados.", "urgent", 60, ${new Date().toISOString()}, "completed", 10)`;
 
       console.log("Admin user created successfully.");
     }
@@ -128,15 +128,15 @@ app.post("/api/auth/register", async (req, res) => {
   const id = Math.random().toString(36).substr(2, 9);
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await db.sql("INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)", [id, username, email, hashedPassword]);
+    await db.sql`INSERT INTO users (id, username, email, password_hash) VALUES (${id}, ${username}, ${email}, ${hashedPassword})`;
     
     const token = jwt.sign({ id, username }, JWT_SECRET);
     
     const p1Id = "p1-" + id;
-    await db.sql("INSERT INTO projects (id, userId, name, color, description, lastAccessed) VALUES (?, ?, ?, ?, ?, ?)", [p1Id, id, "Ecosistema Pro", "#6366f1", "Plataforma centralizada para gestão de recursos e infraestrutura.", new Date().toISOString()]);
+    await db.sql`INSERT INTO projects (id, userId, name, color, description, lastAccessed) VALUES (${p1Id}, ${id}, "Ecosistema Pro", "#6366f1", "Plataforma centralizada para gestão de recursos e infraestrutura.", ${new Date().toISOString()})`;
     
-    await db.sql("INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ["t1-" + id, p1Id, id, "Auditoria de Segurança", "Verificar protocolos de criptografia e acessos.", "urgent", 45, new Date().toISOString(), "todo", 9]);
-    await db.sql("INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ["t2-" + id, p1Id, id, "Otimização de Banco", "Executar scripts de limpeza e indexação.", "medium", 30, new Date().toISOString(), "in-progress", 7]);
+    await db.sql`INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (${"t1-" + id}, ${p1Id}, ${id}, "Auditoria de Segurança", "Verificar protocolos de criptografia e acessos.", "urgent", 45, ${new Date().toISOString()}, "todo", 9)`;
+    await db.sql`INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight) VALUES (${"t2-" + id}, ${p1Id}, ${id}, "Otimização de Banco", "Executar scripts de limpeza e indexação.", "medium", 30, ${new Date().toISOString()}, "in-progress", 7)`;
 
     res.json({ token, user: { id, username, email } });
   } catch (error: any) {
@@ -148,7 +148,7 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const results: any = await db.sql("SELECT * FROM users WHERE username = ?", [username]);
+    const results: any = await db.sql`SELECT * FROM users WHERE username = ${username}`;
     const user = results[0];
     
     if (user && await bcrypt.compare(password, user.password_hash)) {
@@ -166,7 +166,7 @@ app.post("/api/auth/login", async (req, res) => {
 // Projects
 app.get("/api/projects", authenticateToken, async (req: any, res) => {
   try {
-    const projects = await db.sql("SELECT * FROM projects WHERE userId = ?", [req.user.id]);
+    const projects = await db.sql`SELECT * FROM projects WHERE userId = ${req.user.id}`;
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -176,7 +176,7 @@ app.get("/api/projects", authenticateToken, async (req: any, res) => {
 app.post("/api/projects", authenticateToken, async (req: any, res) => {
   const { id, name, color, description } = req.body;
   try {
-    await db.sql("INSERT INTO projects (id, userId, name, color, description) VALUES (?, ?, ?, ?, ?)", [id, req.user.id, name, color, description]);
+    await db.sql`INSERT INTO projects (id, userId, name, color, description) VALUES (${id}, ${req.user.id}, ${name}, ${color}, ${description})`;
     res.json({ id, name, color, description });
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -186,7 +186,7 @@ app.post("/api/projects", authenticateToken, async (req: any, res) => {
 app.patch("/api/projects/:id", authenticateToken, async (req: any, res) => {
   const { lastAccessed } = req.body;
   try {
-    await db.sql("UPDATE projects SET lastAccessed = ? WHERE id = ? AND userId = ?", [lastAccessed, req.params.id, req.user.id]);
+    await db.sql`UPDATE projects SET lastAccessed = ${lastAccessed} WHERE id = ${req.params.id} AND userId = ${req.user.id}`;
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -196,7 +196,7 @@ app.patch("/api/projects/:id", authenticateToken, async (req: any, res) => {
 // Tasks
 app.get("/api/tasks", authenticateToken, async (req: any, res) => {
   try {
-    const tasks = await db.sql("SELECT * FROM tasks WHERE userId = ?", [req.user.id]);
+    const tasks = await db.sql`SELECT * FROM tasks WHERE userId = ${req.user.id}`;
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -206,10 +206,10 @@ app.get("/api/tasks", authenticateToken, async (req: any, res) => {
 app.post("/api/tasks", authenticateToken, async (req: any, res) => {
   const { id, projectId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight } = req.body;
   try {
-    await db.sql(`
+    await db.sql`
       INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [id, projectId, req.user.id, title, description, priority, estimatedMinutes, deadline, status, strategicWeight]);
+      VALUES (${id}, ${projectId}, ${req.user.id}, ${title}, ${description}, ${priority}, ${estimatedMinutes}, ${deadline}, ${status}, ${strategicWeight})
+    `;
     res.json(req.body);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -219,7 +219,7 @@ app.post("/api/tasks", authenticateToken, async (req: any, res) => {
 app.patch("/api/tasks/:id", authenticateToken, async (req: any, res) => {
   const { status } = req.body;
   try {
-    await db.sql("UPDATE tasks SET status = ? WHERE id = ? AND userId = ?", [status, req.params.id, req.user.id]);
+    await db.sql`UPDATE tasks SET status = ${status} WHERE id = ${req.params.id} AND userId = ${req.user.id}`;
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -228,7 +228,7 @@ app.patch("/api/tasks/:id", authenticateToken, async (req: any, res) => {
 
 app.delete("/api/tasks/:id", authenticateToken, async (req: any, res) => {
   try {
-    await db.sql("DELETE FROM tasks WHERE id = ? AND userId = ?", [req.params.id, req.user.id]);
+    await db.sql`DELETE FROM tasks WHERE id = ${req.params.id} AND userId = ${req.user.id}`;
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: "Database error" });

@@ -193,6 +193,18 @@ app.patch("/api/projects/:id", authenticateToken, async (req: any, res) => {
   }
 });
 
+app.delete("/api/projects/:id", authenticateToken, async (req: any, res) => {
+  try {
+    // Manually delete tasks first to ensure integrity if cascade is not set
+    await db.sql`DELETE FROM tasks WHERE projectId = ${req.params.id} AND userId = ${req.user.id}`;
+    await db.sql`DELETE FROM projects WHERE id = ${req.params.id} AND userId = ${req.user.id}`;
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Delete project error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 // Tasks
 app.get("/api/tasks", authenticateToken, async (req: any, res) => {
   try {

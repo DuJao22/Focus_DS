@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Mail, Lock, User as UserIcon, ArrowRight, Github } from 'lucide-react';
+import { LayoutDashboard, Mail, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { User } from '../types';
+import Footer from './Footer';
 
 interface AuthViewProps {
   onLogin: (user: User, token: string) => void;
+  onBackToLanding?: () => void;
 }
 
-export default function AuthView({ onLogin }: AuthViewProps) {
+export default function AuthView({ onLogin, onBackToLanding }: AuthViewProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +184,18 @@ export default function AuthView({ onLogin }: AuthViewProps) {
             >
               {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já possui uma conta? Entre aqui'}
             </button>
+            {onBackToLanding && (
+               <button 
+                 onClick={onBackToLanding}
+                 className="text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-slate-500 transition-colors"
+               >
+                 Voltar para o início
+               </button>
+            )}
+          </div>
+          
+          <div className="mt-20">
+            <Footer />
           </div>
         </motion.div>
       </div>

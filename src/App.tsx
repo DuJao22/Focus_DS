@@ -16,7 +16,10 @@ import {
   Plus,
   ArrowUpRight,
   AlertTriangle,
-  Trello
+  Trello,
+  Trash2,
+  Instagram,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -27,6 +30,8 @@ import DashboardView from './components/DashboardView';
 import TasksView from './components/TasksView';
 import TaskModal from './components/TaskModal';
 import AuthView from './components/AuthView';
+import LandingPage from './components/LandingPage';
+import Footer from './components/Footer';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -34,6 +39,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [showLanding, setShowLanding] = useState(!localStorage.getItem('token'));
   
   const [activeTab, setActiveTab] = useState<'dashboard' | 'tasks' | 'projects'>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -183,6 +189,27 @@ export default function App() {
     }
   };
 
+  const deleteProject = async (projectId: string) => {
+    if (!window.confirm("Deseja realmente excluir este sistema? Todas as tarefas vinculadas serão apagadas.")) {
+      return;
+    }
+
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+    setTasks(prev => prev.filter(t => t.projectId !== projectId));
+    if (selectedProjectId === projectId) {
+      setSelectedProjectId(null);
+    }
+
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error("Failed to delete project", err);
+    }
+  };
+
   const isProjectInactive = (project: Project) => {
     if (!project.lastAccessed) return false;
     const diff = differenceInMinutes(new Date(), new Date(project.lastAccessed));
@@ -190,7 +217,10 @@ export default function App() {
   };
 
   if (!token || !user) {
-    return <AuthView onLogin={handleLogin} />;
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
+    return <AuthView onLogin={handleLogin} onBackToLanding={() => setShowLanding(true)} />;
   }
 
   return (
@@ -446,6 +476,13 @@ export default function App() {
                                  >
                                    <Plus size={20} strokeWidth={3} />
                                  </button>
+                                 <button 
+                                   onClick={() => deleteProject(project.id)}
+                                   className="p-3 rounded-2xl bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-lg shadow-red-100"
+                                   title="Excluir Sistema"
+                                 >
+                                   <Trash2 size={20} />
+                                 </button>
                               </div>
                             </div>
 
@@ -543,6 +580,16 @@ export default function App() {
                                 >
                                   <Trello size={14} />
                                 </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteProject(project.id);
+                                  }}
+                                  className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
+                                  title="Excluir Sistema"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
                                 <ArrowUpRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
                              </div>
                           </div>
@@ -559,6 +606,8 @@ export default function App() {
               )}
             </motion.div>
           </AnimatePresence>
+
+          <Footer />
         </div>
       </main>
 

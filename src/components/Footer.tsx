@@ -44,7 +44,7 @@ export default function Footer() {
           </a>
 
           <a 
-            href="https://instagram.com/davi.ai" 
+            href="https://instagram.com/davi.ai1" 
             target="_blank" 
             rel="noopener noreferrer"
             className="group flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -54,7 +54,7 @@ export default function Footer() {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[10px] font-black uppercase tracking-widest leading-none">CEO Paulo Davi</span>
-              <span className="text-[11px] font-medium opacity-60">@davi.ai</span>
+              <span className="text-[11px] font-medium opacity-60">@davi.ai1</span>
             </div>
           </a>
         </div>

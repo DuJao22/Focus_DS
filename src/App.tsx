@@ -32,6 +32,7 @@ import TaskModal from './components/TaskModal';
 import AuthView from './components/AuthView';
 import LandingPage from './components/LandingPage';
 import Footer from './components/Footer';
+import ProjectModal from './components/ProjectModal';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -48,6 +49,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   // Initial Fetch
@@ -207,6 +209,29 @@ export default function App() {
       });
     } catch (err) {
       console.error("Failed to delete project", err);
+    }
+  };
+
+  const handleSaveProject = async (newProjectData: Omit<Project, 'id'>) => {
+    const newProject: Project = {
+      ...newProjectData,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+
+    setProjects(prev => [...prev, newProject]);
+    setIsProjectModalOpen(false);
+
+    try {
+      await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newProject)
+      });
+    } catch (err) {
+      console.error("Failed to sync project", err);
     }
   };
 
@@ -596,7 +621,10 @@ export default function App() {
                         </div>
                       ))}
                       
-                      <button className="border-4 border-dashed border-slate-100 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-3 text-slate-300 hover:border-indigo-200 hover:text-indigo-400 transition-all group min-h-[260px]">
+                      <button 
+                        onClick={() => setIsProjectModalOpen(true)}
+                        className="border-4 border-dashed border-slate-100 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-3 text-slate-300 hover:border-indigo-200 hover:text-indigo-400 transition-all group min-h-[260px]"
+                      >
                         <Plus size={32} />
                         <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-center">Conectar Novo Sistema</span>
                       </button>
@@ -617,6 +645,12 @@ export default function App() {
         onSave={handleSaveTask}
         projects={projects}
         initialProjectId={selectedProjectId}
+      />
+
+      <ProjectModal 
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        onSave={handleSaveProject}
       />
     </div>
   );

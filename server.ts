@@ -174,11 +174,12 @@ app.get("/api/projects", authenticateToken, async (req: any, res) => {
 });
 
 app.post("/api/projects", authenticateToken, async (req: any, res) => {
-  const { id, name, color, description } = req.body;
+  const { id, name, color, description, lastAccessed } = req.body;
   try {
-    await db.sql`INSERT INTO projects (id, userId, name, color, description) VALUES (${id}, ${req.user.id}, ${name}, ${color}, ${description})`;
-    res.json({ id, name, color, description });
+    await db.sql`INSERT INTO projects (id, userId, name, color, description, lastAccessed) VALUES (${id}, ${req.user.id}, ${name}, ${color}, ${description}, ${lastAccessed})`;
+    res.json({ id, name, color, description, lastAccessed });
   } catch (err) {
+    console.error("Create project error:", err);
     res.status(500).json({ error: "Database error" });
   }
 });

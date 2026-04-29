@@ -15,35 +15,61 @@ interface TaskModalProps {
 export default function TaskModal({ isOpen, onClose, onSave, projects, initialProjectId }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [projectId, setProjectId] = useState(initialProjectId || (projects.length > 0 ? projects[0].id : ''));
+  const [projectId, setProjectId] = useState(initialProjectId || '');
   const [priority, setPriority] = useState<Priority>('medium');
   const [status, setStatus] = useState<TaskStatus>('todo');
   const [estimatedMinutes, setEstimatedMinutes] = useState(30);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Update projectId if it's empty and projects load
+  React.useEffect(() => {
+    if (!projectId && projects.length > 0) {
+      setProjectId(projects[0].id);
+    }
+  }, [projects, projectId]);
+
+  // Update projectId if initialProjectId changes (e.g. user opens modal from a project view)
+  React.useEffect(() => {
+    if (initialProjectId) {
+      setProjectId(initialProjectId);
+    }
+  }, [initialProjectId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !projectId) return;
+    if (!title || !projectId || isSubmitting) return;
 
-    onSave({
-      title,
-      description,
-      projectId,
-      priority,
-      status,
-      estimatedMinutes,
-      deadline: new Date().toISOString(),
-      strategicWeight: 5,
-      tags,
-      subtasks: []
-    });
+    setIsSubmitting(true);
+    setError(null);
 
-    // Reset fields
-    setTitle('');
-    setDescription('');
-    setTags([]);
-    onClose();
+    try {
+      await onSave({
+        title: title.trim(),
+        description: description.trim(),
+        projectId,
+        priority,
+        status,
+        estimatedMinutes,
+        deadline: new Date().toISOString(),
+        strategicWeight: 5,
+        tags,
+        subtasks: []
+      });
+
+      // Reset fields
+      setTitle('');
+      setDescription('');
+      setTags([]);
+      onClose();
+    } catch (err) {
+      setError("Erro ao salvar a tarefa. Tente novamente.");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addTag = () => {
@@ -85,6 +111,23 @@ export default function TaskModal({ isOpen, onClose, onSave, projects, initialPr
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+            {projects.length === 0 && (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-4">
+                <AlertCircle className="text-amber-500 shrink-0 mt-1" size={18} />
+                <div className="space-y-1">
+                  <p className="text-amber-800 text-xs font-black uppercase tracking-tight">Nenhum Sistema Conectado</p>
+                  <p className="text-amber-600 text-[11px] font-medium leading-relaxed">Você precisa primeiro conectar um sistema na aba "Sistemas" antes de criar tarefas.</p>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 text-red-600">
+                <AlertCircle size={18} />
+                <span className="text-[11px] font-bold uppercase tracking-widest">{error}</span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Título da Tarefa</label>
               <input
@@ -194,23 +237,24 @@ export default function TaskModal({ isOpen, onClose, onSave, projects, initialPr
                 </button>
               </div>
             </div>
+            
+            <div className="p-8 bg-slate-50 flex items-center gap-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-8 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-all uppercase tracking-widest text-[11px]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={!title || !projectId || isSubmitting || projects.length === 0}
+                className="flex-[2] bg-indigo-600 px-8 py-4 rounded-2xl font-black text-white hover:bg-indigo-700 transition-all uppercase tracking-widest text-[11px] shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
+              </button>
+            </div>
           </form>
-
-          <div className="p-8 bg-slate-50 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-8 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-all uppercase tracking-widest text-[11px]"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="flex-[2] bg-indigo-600 px-8 py-4 rounded-2xl font-black text-white hover:bg-indigo-700 transition-all uppercase tracking-widest text-[11px] shadow-lg shadow-indigo-200"
-            >
-              Criar Tarefa
-            </button>
-          </div>
         </motion.div>
       </div>
     </AnimatePresence>

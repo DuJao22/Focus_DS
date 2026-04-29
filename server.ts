@@ -190,6 +190,7 @@ app.patch("/api/projects/:id", authenticateToken, async (req: any, res) => {
     await db.sql`UPDATE projects SET lastAccessed = ${lastAccessed} WHERE id = ${req.params.id} AND userId = ${req.user.id}`;
     res.sendStatus(200);
   } catch (err) {
+    console.error("Update project error:", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -212,6 +213,7 @@ app.get("/api/tasks", authenticateToken, async (req: any, res) => {
     const tasks = await db.sql`SELECT * FROM tasks WHERE userId = ${req.user.id}`;
     res.json(tasks);
   } catch (err) {
+    console.error("Fetch tasks error:", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -225,6 +227,7 @@ app.post("/api/tasks", authenticateToken, async (req: any, res) => {
     `;
     res.json(req.body);
   } catch (err) {
+    console.error("Create task error:", err);
     res.status(500).json({ error: "Database error" });
   }
 });

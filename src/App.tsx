@@ -185,7 +185,7 @@ export default function App() {
     setIsTaskModalOpen(false);
 
     try {
-      await fetch('/api/tasks', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -193,8 +193,16 @@ export default function App() {
         },
         body: JSON.stringify(newTask)
       });
+      
+      if (!response.ok) {
+        throw new Error("API error");
+      }
+      
+      return newTask;
     } catch (err) {
       console.error("Failed to sync task", err);
+      // Optional: show a toast or alert
+      throw err;
     }
   };
 

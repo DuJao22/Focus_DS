@@ -58,6 +58,7 @@ async function initDb() {
         deadline TEXT,
         status TEXT,
         strategicWeight INTEGER,
+        tags TEXT,
         FOREIGN KEY(projectId) REFERENCES projects(id),
         FOREIGN KEY(userId) REFERENCES users(id)
       );
@@ -219,11 +220,12 @@ app.get("/api/tasks", authenticateToken, async (req: any, res) => {
 });
 
 app.post("/api/tasks", authenticateToken, async (req: any, res) => {
-  const { id, projectId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight } = req.body;
+  const { id, projectId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight, tags } = req.body;
   try {
+    const tagsJson = JSON.stringify(tags || []);
     await db.sql`
-      INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight)
-      VALUES (${id}, ${projectId}, ${req.user.id}, ${title}, ${description}, ${priority}, ${estimatedMinutes}, ${deadline}, ${status}, ${strategicWeight})
+      INSERT INTO tasks (id, projectId, userId, title, description, priority, estimatedMinutes, deadline, status, strategicWeight, tags)
+      VALUES (${id}, ${projectId}, ${req.user.id}, ${title}, ${description}, ${priority}, ${estimatedMinutes}, ${deadline}, ${status}, ${strategicWeight}, ${tagsJson})
     `;
     res.json(req.body);
   } catch (err) {

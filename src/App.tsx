@@ -49,6 +49,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
@@ -175,35 +176,67 @@ export default function App() {
     });
   };
 
-  const handleSaveTask = async (newTaskData: Omit<Task, 'id'>) => {
-    const newTask: Task = {
-      ...newTaskData,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    
-    setTasks(prev => [newTask, ...prev]);
-    setIsTaskModalOpen(false);
+  const handleSaveTask = async (taskData: Omit<Task, 'id'>) => {
+    if (editingTask) {
+      // Update existing task
+      const updatedTask: Task = { ...taskData, id: editingTask.id };
+      setTasks(prev => prev.map(t => t.id === editingTask.id ? updatedTask : t));
+      setIsTaskModalOpen(false);
+      setEditingTask(null);
 
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newTask)
-      });
-      
-      if (!response.ok) {
-        throw new Error("API error");
+      try {
+        const response = await fetch(`/api/tasks/${editingTask.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updatedTask)
+        });
+        
+        if (!response.ok) throw new Error("API error");
+        return updatedTask;
+      } catch (err) {
+        console.error("Failed to sync updated task", err);
+        throw err;
       }
+    } else {
+      // Create new task
+      const newTask: Task = {
+        ...taskData,
+        id: Math.random().toString(36).substr(2, 9),
+      };
       
-      return newTask;
-    } catch (err) {
-      console.error("Failed to sync task", err);
-      // Optional: show a toast or alert
-      throw err;
+      setTasks(prev => [newTask, ...prev]);
+      setIsTaskModalOpen(false);
+
+      try {
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newTask)
+        });
+        
+        if (!response.ok) throw new Error("API error");
+        return newTask;
+      } catch (err) {
+        console.error("Failed to sync task", err);
+        throw err;
+      }
     }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleAddTask = () => {
+    setEditingTask(null);
+    setIsTaskModalOpen(true);
   };
 
   const deleteTask = async (taskId: string) => {
@@ -455,7 +488,7 @@ export default function App() {
                <span className="capitalize">{format(new Date(), "EEEE, d 'de' MMM", { locale: ptBR })}</span>
             </div>
             <button 
-              onClick={() => setIsTaskModalOpen(true)}
+              onClick={handleAddTask}
               className="flex items-center gap-2 ai-accent text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-all"
             >
               <Plus size={16} strokeWidth={3} />
@@ -474,8 +507,8 @@ export default function App() {
               transition={{ duration: 0.2 }}
               className="max-w-6xl mx-auto w-full min-h-full"
             >
-              {activeTab === 'dashboard' && <DashboardView projects={projects} tasks={tasks} onProjectSelect={handleProjectSelect} />}
-              {activeTab === 'tasks' && <TasksView tasks={tasks} projects={projects} setTasks={setTasks} onProjectSelect={handleProjectSelect} onAddTask={() => setIsTaskModalOpen(true)} onDeleteTask={deleteTask} />}
+              {activeTab === 'dashboard' && <DashboardView projects={projects} tasks={tasks} onProjectSelect={handleProjectSelect} onEditTask={handleEditTask} />}
+              {activeTab === 'tasks' && <TasksView tasks={tasks} projects={projects} setTasks={setTasks} onProjectSelect={handleProjectSelect} onAddTask={handleAddTask} onEditTask={handleEditTask} onDeleteTask={deleteTask} />}
               {activeTab === 'projects' && (
                 <div className="space-y-8">
                   {selectedProjectId ? (
@@ -524,7 +557,7 @@ export default function App() {
                                    {tasks.filter(t => t.projectId === selectedProjectId).length} Tarefas
                                  </div>
                                  <button 
-                                   onClick={() => setIsTaskModalOpen(true)}
+                                   onClick={handleAddTask}
                                    className="ai-accent text-white p-3 rounded-2xl shadow-lg shadow-indigo-100"
                                  >
                                    <Plus size={20} strokeWidth={3} />
@@ -547,7 +580,10 @@ export default function App() {
                                   </h3>
                                   <div className="space-y-3">
                                     {tasks.filter(t => t.projectId === selectedProjectId && t.status === status).map(task => (
-                                      <div key={task.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 group relative">
+                                      <div key={task.id} 
+                                        onClick={() => handleEditTask(task)}
+                                        className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 group relative cursor-pointer hover:border-indigo-200 transition-all"
+                                      >
                                         <h4 className="font-bold text-sm text-slate-800 group-hover:text-indigo-600 transition-colors uppercase tracking-tight pr-12">{task.title}</h4>
                                         <p className="text-[11px] text-slate-400 line-clamp-1 mt-1">{task.description}</p>
                                         
@@ -669,10 +705,14 @@ export default function App() {
 
       <TaskModal 
         isOpen={isTaskModalOpen} 
-        onClose={() => setIsTaskModalOpen(false)} 
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setEditingTask(null);
+        }} 
         onSave={handleSaveTask}
         projects={projects}
         initialProjectId={selectedProjectId}
+        editingTask={editingTask}
       />
 
       <ProjectModal 

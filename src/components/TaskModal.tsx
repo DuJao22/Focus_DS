@@ -10,9 +10,10 @@ interface TaskModalProps {
   onSave: (task: Omit<Task, 'id'>) => void;
   projects: Project[];
   initialProjectId?: string | null;
+  editingTask?: Task | null;
 }
 
-export default function TaskModal({ isOpen, onClose, onSave, projects, initialProjectId }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, onSave, projects, initialProjectId, editingTask }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState(initialProjectId || '');
@@ -37,6 +38,28 @@ export default function TaskModal({ isOpen, onClose, onSave, projects, initialPr
       setProjectId(initialProjectId);
     }
   }, [initialProjectId]);
+
+  // Pre-fill form if editing
+  React.useEffect(() => {
+    if (editingTask) {
+      setTitle(editingTask.title);
+      setDescription(editingTask.description || '');
+      setProjectId(editingTask.projectId);
+      setPriority(editingTask.priority);
+      setStatus(editingTask.status);
+      setEstimatedMinutes(editingTask.estimatedMinutes);
+      setTags(editingTask.tags || []);
+    } else {
+      // Reset if creating new
+      setTitle('');
+      setDescription('');
+      setProjectId(initialProjectId || (projects.length > 0 ? projects[0].id : ''));
+      setPriority('medium');
+      setStatus('todo');
+      setEstimatedMinutes(30);
+      setTags([]);
+    }
+  }, [editingTask, isOpen, initialProjectId, projects]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,8 +122,12 @@ export default function TaskModal({ isOpen, onClose, onSave, projects, initialPr
         >
           <div className="p-8 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Nova Tarefa</h2>
-              <p className="text-slate-400 text-sm font-medium">Configure seu próximo passo estratégico</p>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+                {editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}
+              </h2>
+              <p className="text-slate-400 text-sm font-medium">
+                {editingTask ? 'Atualize os detalhes da sua tarefa' : 'Configure seu próximo passo estratégico'}
+              </p>
             </div>
             <button 
               onClick={onClose}
@@ -251,7 +278,7 @@ export default function TaskModal({ isOpen, onClose, onSave, projects, initialPr
                 disabled={!title || !projectId || isSubmitting || projects.length === 0}
                 className="flex-[2] bg-indigo-600 px-8 py-4 rounded-2xl font-black text-white hover:bg-indigo-700 transition-all uppercase tracking-widest text-[11px] shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
-                {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
+                {isSubmitting ? 'Salvando...' : (editingTask ? 'Salvar Alterações' : 'Criar Tarefa')}
               </button>
             </div>
           </form>

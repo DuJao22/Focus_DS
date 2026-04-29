@@ -251,6 +251,30 @@ app.delete("/api/tasks/:id", authenticateToken, async (req: any, res) => {
   }
 });
 
+app.put("/api/tasks/:id", authenticateToken, async (req: any, res) => {
+  const { title, description, projectId, priority, status, estimatedMinutes, deadline, strategicWeight, tags } = req.body;
+  try {
+    const tagsJson = JSON.stringify(tags || []);
+    await db.sql`
+      UPDATE tasks 
+      SET title = ${title}, 
+          description = ${description}, 
+          projectId = ${projectId}, 
+          priority = ${priority}, 
+          status = ${status}, 
+          estimatedMinutes = ${estimatedMinutes}, 
+          deadline = ${deadline}, 
+          strategicWeight = ${strategicWeight}, 
+          tags = ${tagsJson}
+      WHERE id = ${req.params.id} AND userId = ${req.user.id}
+    `;
+    res.json(req.body);
+  } catch (err) {
+    console.error("Update task error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 async function startServer() {
   await initDb();
   await ensureAdminUser();

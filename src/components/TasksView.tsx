@@ -20,6 +20,7 @@ interface TasksViewProps {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   onProjectSelect?: (projectId: string) => void;
   onAddTask?: () => void;
+  onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
 }
 
@@ -38,7 +39,7 @@ const STATUS_FLOW: Record<TaskStatus, TaskStatus> = {
   'completed': 'backlog'
 };
 
-export default function TasksView({ tasks, projects, setTasks, onProjectSelect, onAddTask, onDeleteTask }: TasksViewProps) {
+export default function TasksView({ tasks, projects, setTasks, onProjectSelect, onAddTask, onEditTask, onDeleteTask }: TasksViewProps) {
   const [viewType, setViewType] = React.useState<'board' | 'list'>('board');
   const columns: { id: TaskStatus; label: string }[] = [
     { id: 'backlog', label: 'Estoque / Backlog' },
@@ -126,7 +127,8 @@ export default function TasksView({ tasks, projects, setTasks, onProjectSelect, 
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         key={task.id}
-                        className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative cursor-grab active:cursor-grabbing hover:border-indigo-100"
+                        onClick={() => onEditTask?.(task)}
+                        className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative cursor-pointer active:scale-98 hover:border-indigo-200"
                       >
                         <div className="flex items-start justify-between mb-4">
                           <span 
@@ -236,10 +238,14 @@ export default function TasksView({ tasks, projects, setTasks, onProjectSelect, 
                     <motion.div 
                       key={task.id}
                       layout
-                      className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 group hover:border-indigo-100 transition-all"
+                      onClick={() => onEditTask?.(task)}
+                      className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 group hover:border-indigo-100 transition-all cursor-pointer"
                     >
                       <button 
-                        onClick={() => updateStatus(task.id, STATUS_FLOW[task.status])}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateStatus(task.id, STATUS_FLOW[task.status]);
+                        }}
                         className="w-6 h-6 rounded-lg border-2 border-slate-200 flex items-center justify-center text-transparent hover:border-indigo-400 hover:text-indigo-400 transition-all shrink-0"
                       >
                         <CheckCircle2 size={14} />
@@ -259,7 +265,12 @@ export default function TasksView({ tasks, projects, setTasks, onProjectSelect, 
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: project?.color }} />
                           <span className="text-[10px] font-bold text-slate-400 uppercase hidden sm:block">{project?.name}</span>
                         </div>
-                        <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-slate-500 cursor-pointer">
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-slate-500 cursor-pointer"
+                        >
                           <MoreVertical size={16} />
                         </div>
                       </div>

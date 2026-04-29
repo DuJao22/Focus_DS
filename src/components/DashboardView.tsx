@@ -18,6 +18,7 @@ interface DashboardViewProps {
   projects: Project[];
   tasks: Task[];
   onProjectSelect?: (projectId: string) => void;
+  onEditTask?: (task: Task) => void;
 }
 
 const data = [
@@ -28,7 +29,7 @@ const data = [
   { name: 'Fri', hours: 3, efficiency: 60 },
 ];
 
-export default function DashboardView({ projects, tasks, onProjectSelect }: DashboardViewProps) {
+export default function DashboardView({ projects, tasks, onProjectSelect, onEditTask }: DashboardViewProps) {
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
@@ -57,51 +58,87 @@ export default function DashboardView({ projects, tasks, onProjectSelect }: Dash
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Productivity Chart */}
-        <div className="lg:col-span-2 glass p-5 sm:p-8 rounded-[2rem] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-            <div>
-              <h3 className="font-bold text-lg text-slate-900 tracking-tight">Pulso de Produtividade</h3>
-              <p className="text-xs text-slate-400 font-medium">Eficiência semanal e horas de foco</p>
+        <div className="lg:col-span-2 space-y-8">
+          <div className="glass p-5 sm:p-8 rounded-[2rem] overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 tracking-tight">Pulso de Produtividade</h3>
+                <p className="text-xs text-slate-400 font-medium">Eficiência semanal e horas de foco</p>
+              </div>
+              <select className="bg-slate-100 border-none rounded-xl px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight focus:ring-0 w-fit">
+                <Option value="week">Últimos 7 dias</Option>
+                <Option value="month">Último Mês</Option>
+              </select>
             </div>
-            <select className="bg-slate-100 border-none rounded-xl px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight focus:ring-0 w-fit">
-              <Option value="week">Últimos 7 dias</Option>
-              <Option value="month">Último Mês</Option>
-            </select>
+            
+            <div className="h-[250px] sm:h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                  <defs>
+                    <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="hours" 
+                    stroke="#6366f1" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorHours)" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="efficiency" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    fill="transparent"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          
-          <div className="h-[250px] sm:h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
-                <defs>
-                  <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="hours" 
-                  stroke="#6366f1" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorHours)" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="efficiency" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  fill="transparent"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+
+          {/* Recent Tasks */}
+          <div className="glass p-5 sm:p-8 rounded-[2rem]">
+            <div className="flex items-center justify-between mb-6 px-1">
+              <h3 className="font-bold text-lg text-slate-900 tracking-tight uppercase">Fluxo de Trabalho</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ações Recentes</span>
+            </div>
+            <div className="space-y-4">
+              {tasks.filter(t => t.status !== 'completed').slice(0, 4).map(task => {
+                const project = projects.find(p => p.id === task.projectId);
+                return (
+                  <div 
+                    key={task.id}
+                    onClick={() => onEditTask?.(task)}
+                    className="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-white transition-all cursor-pointer group"
+                  >
+                    <div className="w-2 h-10 rounded-full" style={{ backgroundColor: project?.color }} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-slate-800 uppercase tracking-tight truncate group-hover:text-indigo-600 transition-colors">{task.title}</h4>
+                      <p className="text-[11px] text-slate-400 font-medium truncate">{project?.name}</p>
+                    </div>
+                    <div className="bg-white border border-slate-100 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-slate-400">
+                      {task.priority === 'urgent' ? 'Urgente' : task.priority === 'high' ? 'Alta' : 'Normal'}
+                    </div>
+                  </div>
+                );
+              })}
+              {tasks.filter(t => t.status !== 'completed').length === 0 && (
+                <div className="text-center py-8 text-slate-300 font-bold text-xs uppercase tracking-widest">
+                  Sem tarefas pendentes hoje
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

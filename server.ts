@@ -78,6 +78,16 @@ async function initDb() {
     }
 
     console.log("Database schema initialized.");
+
+    // Keep-alive for SQLite Cloud
+    setInterval(async () => {
+      try {
+        await db.sql`SELECT 1`;
+        console.log("Database heartbeat sent to SQLite Cloud.");
+      } catch (err) {
+        console.error("Database heartbeat failed:", err);
+      }
+    }, 5 * 60 * 1000); // Every 5 minutes
   } catch (err) {
     console.error("Failed to initialize database:", err);
   }
@@ -91,7 +101,8 @@ const ensureAdminUser = async () => {
 
   try {
     const results: any = await db.sql`SELECT * FROM users WHERE username = ${adminUsername}`;
-    const existingAdmin = results[0];
+    const rows = Array.isArray(results) ? results : (results?.data || []);
+    const existingAdmin = rows[0];
 
     if (!existingAdmin) {
       console.log(`Setting up admin user: ${adminUsername}`);
@@ -163,18 +174,30 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   try {
+    console.log(`Login attempt for user: ${username}`);
     const results: any = await db.sql`SELECT * FROM users WHERE username = ${username}`;
-    const user = results[0];
     
-    if (user && await bcrypt.compare(password, user.password_hash)) {
-      const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-      res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
+    // Support different result structures if the driver returns them
+    const rows = Array.isArray(results) ? results : (results?.data || []);
+    const user = rows[0];
+    
+    if (user) {
+      const isMatch = await bcrypt.compare(password, user.password_hash);
+      if (isMatch) {
+        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+        return res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+      }
     }
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    
+    console.warn(`Failed login attempt for ${username}: Invalid credentials`);
+    res.status(401).json({ error: "Invalid credentials" });
+  } catch (err: any) {
+    console.error("CRITICAL Login error:", {
+      message: err.message,
+      stack: err.stack,
+      username
+    });
+    res.status(500).json({ error: "Internal server error - check logs" });
   }
 });
 

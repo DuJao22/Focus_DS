@@ -63,6 +63,20 @@ async function initDb() {
         FOREIGN KEY(userId) REFERENCES users(id)
       );
     `);
+
+    // Migration for existing databases
+    try {
+      await db.sql(`ALTER TABLE tasks ADD COLUMN tags TEXT`);
+      console.log("Migration: Added tags column to tasks table.");
+    } catch (e: any) {
+      const msg = e.message || String(e);
+      if (msg.includes('duplicate column name') || msg.includes('already exists')) {
+        // Column already exists, ignore
+      } else {
+        console.log("Migration check (tags):", msg);
+      }
+    }
+
     console.log("Database schema initialized.");
   } catch (err) {
     console.error("Failed to initialize database:", err);
@@ -297,7 +311,9 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
+    console.log(`Listening on http://0.0.0.0:${PORT}`);
+    console.log(`Static files serving from: ${path.join(process.cwd(), 'dist')}`);
   });
 }
 

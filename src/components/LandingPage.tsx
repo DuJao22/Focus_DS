@@ -87,6 +87,16 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               Agendar Demo
             </button>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+          >
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            Disponível para instalação via PWA
+          </motion.div>
         </div>
       </section>
 

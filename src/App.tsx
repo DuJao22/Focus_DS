@@ -54,15 +54,35 @@ export default function App() {
 
   // Initial Fetch
   React.useEffect(() => {
-    if (token) {
-      fetch('/api/projects', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(r => r.json()).then(setProjects);
+    const fetchData = async () => {
+      if (!token) return;
+      
+      try {
+        const [projectsRes, tasksRes] = await Promise.all([
+          fetch('/api/projects', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/tasks', { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
 
-      fetch('/api/tasks', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(r => r.json()).then(setTasks);
-    }
+        if (projectsRes.status === 401 || tasksRes.status === 401) {
+          handleLogout();
+          return;
+        }
+
+        if (projectsRes.ok) {
+          const data = await projectsRes.json();
+          setProjects(Array.isArray(data) ? data : []);
+        }
+        
+        if (tasksRes.ok) {
+          const data = await tasksRes.json();
+          setTasks(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Initial fetch failed:", err);
+      }
+    };
+
+    fetchData();
   }, [token]);
 
   const handleLogin = (user: User, token: string) => {

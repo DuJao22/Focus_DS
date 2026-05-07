@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizza Futura — A Melhor Pizza da Cidade</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'Inter',sans-serif;background:#0a0a0a;color:#fff;overflow-x:hidden}
+::selection{background:#ff3c00;color:#fff}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ff3c00,#ff7a00);border-radius:3px}
+
+/* Smooth scroll wrapper */
+.smooth-wrapper{width:100%;position:relative}
+
+/* ===== NAVIGATION ===== */
+.nav{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;transition:all .4s ease;backdrop-filter:blur(0px)}
+.nav.scrolled{background:rgba(10,10,10,.85);backdrop-filter:blur(20px);padding:15px 40px;border-bottom:1px solid rgba(255,60,0,.1)}
+.nav-logo{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;text-decoration:none;letter-spacing:2px}
+.nav-logo span{color:#ff3c00}
+.nav-links{display:flex;gap:35px;list-style:none}
+.nav-links a{font-family:'Inter',sans-serif;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.7);text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:all .3s ease;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;background:linear-gradient(90deg,#ff3c00,#ff7a00);transition:width .3s ease}
+.nav-links a:hover{color:#fff}
+.nav-links a:hover::after{width:100%}
+.nav-cta{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:600;color:#0a0a0a;background:linear-gradient(135deg,#ff3c00,#ff7a00);padding:10px 24px;border-radius:30px;text-decoration:none;letter-spacing:1px;transition:all .3s ease;box-shadow:0 0 20px rgba(255,60,0,.3)}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(255,60,0,.5)}
+
+/* ===== HERO ===== */
+.hero{position:relative;width:100%;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#hero-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}
+.hero-content{position:relative;z-index:10;text-align:center;pointer-events:none}
+.hero-badge{display:inline-block;font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:600;color:#ffd700;border:1px solid rgba(255,215,0,.4);padding:8px 20px;border-radius:30px;letter-spacing:3px;text-transform:uppercase;margin-bottom:30px;backdrop-filter:blur(10px);background:rgba(255,215,0,.05);animation:badgeGlow 3s ease-in-out infinite}
+@keyframes badgeGlow{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.2)}50%{box-shadow:0 0 25px rgba(255,215,0,.4)}}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:900;line-height:1.1;letter-spacing:-1px;margin-bottom:20px}
+.hero-title .line{display:block;overflow:hidden}
+.hero-title .line span{display:inline-block}
+.hero-title .accent{color:#ff3c00;text-shadow:0 0 40px rgba(255,60,0,.5)}
+.hero-subtitle{font-family:'Inter',sans-serif;font-size:clamp(1rem,2vw,1.3rem);font-weight:300;color:rgba(255,255,255,.7);max-width:500px;margin:0 auto 40px;line-height:1.6}
+.hero-cta{display:inline-flex;align-items:center;gap:12px;font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:600;color:#fff;background:linear-gradient(135deg,#ff3c00,#ff7a00);padding:16px 40px;border-radius:50px;text-decoration:none;letter-spacing:2px;transition:all .4s ease;box-shadow:0 0 30px rgba(255,60,0,.4);pointer-events:auto;position:relative;overflow:hidden}
+.hero-cta::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s ease}
+.hero-cta:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(255,60,0,.6)}
+.hero-cta:hover::before{left:100%}
+.hero-cta svg{width:18px;height:18px;fill:#fff}
+.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px;animation:scrollBounce 2s ease-in-out infinite}
+@keyframes scrollBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(10px)}}
+.hero-scroll span{font-family:'Inter',sans-serif;font-size:.7rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.hero-scroll-line{width:1px;height:40px;background:linear-gradient(180deg,#ff3c00,transparent);animation:scrollLine 2s ease-in-out infinite}
+@keyframes scrollLine{0%{height:0;opacity:0}50%{height:40px;opacity:1}100%{height:0;opacity:0}}
+
+/* ===== EXPERIENCE / IMMERSIVE ===== */
+.experience{position:relative;padding:150px 0;overflow:hidden}
+.exp-bg-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:clamp(8rem,20vw,25rem);font-weight:900;color:rgba(255,60,0,.03);white-space:nowrap;pointer-events:none;z-index:0}
+.exp-container{max-width:1200px;margin:0 auto;padding:0 40px;position:relative;z-index:1}
+.exp-section{display:flex;align-items:center;gap:80px;margin-bottom:200px;opacity:0;transform:translateY(80px)}
+.exp-section:nth-child(even){flex-direction:row-reverse}
+.exp-visual{flex:1;position:relative}
+.exp-visual-inner{width:100%;aspect-ratio:4/3;border-radius:20px;overflow:hidden;position:relative}
+.exp-visual-inner img{width:100%;height:100%;object-fit:cover}
+.exp-visual-glow{position:absolute;inset:-20px;background:radial-gradient(circle,rgba(255,60,0,.15),transparent 70%);border-radius:30px;z-index:-1}
+.exp-text{flex:1}
+.exp-label{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:600;color:#ff3c00;letter-spacing:4px;text-transform:uppercase;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+.exp-label::before{content:'';width:30px;height:2px;background:linear-gradient(90deg,#ff3c00,transparent)}
+.exp-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;line-height:1.2;margin-bottom:20px}
+.exp-title span{color:#ffd700}
+.exp-desc{font-family:'Inter',sans-serif;font-size:1.05rem;color:rgba(255,255,255,.65);line-height:1.8}
+.exp-number{position:absolute;font-family:'Orbitron',sans-serif;font-size:12rem;font-weight:900;color:rgba(255,60,0,.05);top:-60px;right:-20px;pointer-events:none}
+
+/* Floating ingredients */
+.floating-ingredients{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.float-item{position:absolute;font-size:3rem;opacity:.15;animation:floatItem 8s ease-in-out infinite}
+@keyframes floatItem{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-30px) rotate(10deg)}}
+
+/* ===== MENU ===== */
+.menu{position:relative;padding:150px 0;background:#0a0a0a}
+.menu-header{text-align:center;margin-bottom:80px}
+.menu-label{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:600;color:#ff3c00;letter-spacing:4px;text-transform:uppercase;margin-bottom:15px}
+.menu-title{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:800;margin-bottom:15px}
+.menu-subtitle{font-family:'Inter',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.5);max-width:500px;margin:0 auto}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:30px;max-width:1200px;margin:0 auto;padding:0 40px}
+.menu-card{background:linear-gradient(145deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.06);border-radius:24px;padding:30px;position:relative;overflow:hidden;transition:all .5s ease;cursor:pointer;transform-style:preserve-3d;perspective:1000px}
+.menu-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mouse-x,50%) var(--mouse-y,50%),rgba(255,60,0,.1),transparent 60%);opacity:0;transition:opacity .3s ease}
+.menu-card:hover::before{opacity:1}
+.menu-card:hover{transform:translateY(-10px);border-color:rgba(255,60,0,.3);box-shadow:0 20px 60px rgba(255,60,0,.15),0 0 40px rgba(255,60,0,.05)}
+.menu-card-img{width:100%;aspect-ratio:4/3;border-radius:16px;overflow:hidden;margin-bottom:20px;position:relative}
+.menu-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+.menu-card:hover .menu-card-img img{transform:scale(1.1)}
+.menu-card-badge{position:absolute;top:15px;right:15px;font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:600;color:#ffd700;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);padding:6px 14px;border-radius:20px;backdrop-filter:blur(10px)}
+.menu-card-name{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
+.menu-card-desc{font-family:'Inter',sans-serif;font-size:.9rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:20px}
+.menu-card-footer{display:flex;justify-content:space-between;align-items:center}
+.menu-card-price{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:800;color:#ffd700}
+.menu-card-btn{font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:600;color:#fff;background:linear-gradient(135deg,#ff3c00,#ff7a00);padding:10px 22px;border-radius:25px;border:none;cursor:pointer;letter-spacing:1px;transition:all .3s ease}
+.menu-card-btn:hover{box-shadow:0 0 20px rgba(255,60,0,.4);transform:scale(1.05)}
+
+/* ===== HOW WE MAKE ===== */
+.process{position:relative;padding:150px 0;overflow:hidden}
+.process-header{text-align:center;margin-bottom:100px}
+.process-label{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:600;color:#ff3c00;letter-spacing:4px;text-transform:uppercase;margin-bottom:15px}
+.process-title{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:800;margin-bottom:15px}
+.process-subtitle{font-family:'Inter',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.5);max-width:500px;margin:0 auto}
+.process-timeline{max-width:900px;margin:0 auto;padding:0 40px;position:relative}
+.process-timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#ff3c00,transparent);transform:translateX(-50%)}
+.process-step{display:flex;align-items:center;gap:60px;margin-bottom:120px;position:relative;opacity:0;transform:translateY(60px)}
+.process-step:nth-child(even){flex-direction:row-reverse}
+.process-step-visual{flex:1;position:relative}
+.process-step-visual-inner{width:100%;aspect-ratio:1;border-radius:20px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.08)}
+.process-step-visual-inner img{width:100%;height:100%;object-fit:cover}
+.process-step-visual-glow{position:absolute;inset:-15px;background:radial-gradient(circle,rgba(255,60,0,.12),transparent 70%);border-radius:30px;z-index:-1}
+.process-step-number{position:absolute;top:-15px;left:-15px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ff3c00,#ff7a00);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;box-shadow:0 0 30px rgba(255,60,0,.4);z-index:10}
+.process-step-text{flex:1}
+.process-step-title{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:15px}
+.process-step-desc{font-family:'Inter',sans-serif;font-size:1rem;color:rgba(255,255,255,.6);line-height:1.8}
+.process-step-tag{display:inline-block;font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:600;color:#ffd700;border:1px solid rgba(255,215,0,.3);padding:5px 15px;border-radius:20px;margin-top:15px;letter-spacing:2px}
+
+/* ===== GALLERY ===== */
+.gallery{position:relative;padding:150px 0;overflow:hidden}
+.gallery-header{text-align:center;margin-bottom:80px}
+.gallery-label{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:600;color:#ff3c00;letter-spacing:4px;text-transform:uppercase;margin-bottom:15px}
+.gallery-title{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:800;margin-bottom:15px}
+.gallery-subtitle{font-family:'Inter',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.5);max-width:500px;margin:0 auto}
+.gallery-carousel{position:relative;height:500px;max-width:1200px;margin:0 auto;perspective:1200px}
+.gallery-track{position:absolute;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.23,1,.32,1)}
+.gallery-item{position:absolute;width:350px;height:450px;left:50%;top:50%;margin-left:-175px;margin-top:-225px;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 60px rgba(0,0,0,.5);transition:all .8s cubic-bezier(.23,1,.32,1);cursor:pointer}
+.gallery-item img{width:100%;height:100%;object-fit:cover}
+.gallery-item-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.8));display:flex;flex-direction:column;justify-content:flex-end;padding:30px;opacity:0;transition:opacity .4s ease}
+.gallery-item:hover .gallery-item-overlay{opacity:1}
+.gallery-item-name{font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:5px}
+.gallery-item-desc{font-family:'Inter',sans-serif;font-size:.85rem;color:rgba(255,255,255,.6)}
+.gallery-nav{display:flex;justify-content:center;gap:20px;margin-top:40px}
+.gallery-nav-btn{width:50px;height:50px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;font-size:1.2rem}
+.gallery-nav-btn:hover{background:linear-gradient(135deg,#ff3c00,#ff7a00);border-color:transparent;box-shadow:0 0 20px rgba(255,60,0,.4)}
+
+/* ===== CTA ===== */
+.cta{position:relative;padding:200px 0;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:80vh}
+#cta-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}
+.cta-content{position:relative;z-index:10;text-align:center}
+.cta-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:20px}
+.cta-title span{color:#ff3c00}
+.cta-subtitle{font-family:'Inter',sans-serif;font-size:1.2rem;color:rgba(255,255,255,.6);max-width:500px;margin:0 auto 40px;line-height:1.7}
+.cta-btn{display:inline-flex;align-items:center;gap:12px;font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:#0a0a0a;background:linear-gradient(135deg,#ffd700,#ffaa00);padding:18px 50px;border-radius:50px;text-decoration:none;letter-spacing:2px;transition:all .4s ease;box-shadow:0 0 40px rgba(255,215,0,.3);position:relative;overflow:hidden;animation:ctaPulse 2s ease-in-out infinite}
+@keyframes ctaPulse{0%,100%{box-shadow:0 0 30px rgba(255,215,0,.3)}50%{box-shadow:0 0 60px rgba(255,215,0,.5)}}
+.cta-btn::before{content:'';position:absolute;inset:-3px;background:linear-gradient(135deg,#ffd700,#ff3c00,#ffd700);border-radius:50px;z-index:-1;animation:ctaBorder 3s linear infinite;background-size:200% 200%}
+@keyframes ctaBorder{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.cta-btn-inner{position:relative;z-index:1;background:#ffd700;border-radius:50px;padding:18px 50px;display:flex;align-items:center;gap:12px}
+.cta-btn:hover{transform:translateY(-3px) scale(1.02)}
+.cta-btn svg{width:20px;height:20px;fill:#0a0a0a}
+.cta-phone{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:600;color:#ffd700;margin-top:25px;letter-spacing:2px}
+
+/* ===== FOOTER ===== */
+.footer{position:relative;padding:80px 0 40px;background:#050505;border-top:1px solid rgba(255,255,255,.05)}
+.footer-container{max-width:1200px;margin:0 auto;padding:0 40px}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:60px}
+.footer-brand .footer-logo{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:15px}
+.footer-brand .footer-logo span{color:#ff3c00}
+.footer-brand p{font-family:'Inter',sans-serif;font-size:.9rem;color:rgba(255,255,255,.5);line-height:1.7;max-width:300px}
+.footer-col-title{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:600;color:#fff;letter-spacing:2px;text-transform:uppercase;margin-bottom:25px}
+.footer-links{list-style:none}
+.footer-links li{margin-bottom:12px}
+.footer-links a{font-family:'Inter',sans-serif;font-size:.9rem;color:rgba(255,255,255,.5);text-decoration:none;transition:all .3s ease;display:inline-block}
+.footer-links a:hover{color:#ff3c00;transform:translateX(5px)}
+.footer-social{display:flex;gap:15px;margin-top:20px}
+.footer-social a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);text-decoration:none;transition:all .3s ease;font-size:1rem}
+.footer-social a:hover{border-color:#ff3c00;color:#ff3c00;box-shadow:0 0 20px rgba(255,60,0,.2);transform:translateY(-3px)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.05);padding-top:30px;display:flex;justify-content:space-between;align-items:center}
+.footer-bottom p{font-family:'Inter',sans-serif;font-size:.8rem;color:rgba(255,255,255,.3)}
+.footer-bottom .footer-heart{color:#ff3c00;animation:heartBeat 1.5s ease-in-out infinite}
+@keyframes heartBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+.nav{padding:15px 20px}
+.nav-links{display:none}
+.exp-section,.exp-section:nth-child(even){flex-direction:column;gap:40px}
+.process-step,.process-step:nth-child(even){flex-direction:column;gap:30px;text-align:center}
+.process-timeline::before{left:20px}
+.process-step-number{left:0}
+.footer-top{grid-template-columns:1fr;gap:40px}
+.gallery-item{width:280px;height:360px;margin-left:-140px;margin-top:-180px}
+.menu-grid{grid-template-columns:1fr;padding:0 20px}
+.hero-title{font-size:2.2rem}
+}
+
+/* ===== LOADING ===== */
+.loading-screen{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
+.loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loading-pizza{font-size:4rem;animation:loadingSpin 2s linear infinite;margin-bottom:20px}
+@keyframes loadingSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loading-text{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:4px;color:#ff3c00;text-transform:uppercase}
+.loading-bar{width:200px;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:20px;overflow:hidden}
+.loading-bar-fill{width:0%;height:100%;background:linear-gradient(90deg,#ff3c00,#ff7a00);border-radius:2px;transition:width .3s ease}
+
+/* ===== PARTICLES OVERLAY ===== */
+.particles-overlay{position:fixed;inset:0;pointer-events:none;z-index:999}
+.particle{position:absolute;width:4px;height:4px;background:rgba(255,60,0,.6);border-radius:50%;animation:particleFloat linear infinite}
+@keyframes particleFloat{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loading">
+  <div class="loading-pizza">🍕</div>
+  <div class="loading-text">Preparando sua experiência...</div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loading-bar"></div></div>
+</div>
+
+<!-- Navigation -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo">PIZZA<span>FUTURA</span></a>
+  <ul class="nav-links">
+    <li><a href="#experience">Experiência</a></li>
+    <li><a href="#menu">Cardápio</a></li>
+    <li><a href="#process">Processo</a></li>
+    <li><a href="#gallery">Galeria</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">Pedir Agora</a>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">★ Premium Gourmet ★</div>
+    <h1 class="hero-title">
+      <span class="line"><span>A Melhor</span></span>
+      <span class="line"><span class="accent">Pizza</span></span>
+      <span class="line"><span>da Cidade</span></span>
+    </h1>
+    <p class="hero-subtitle">Uma experiência gastronômica futurista onde tradição italiana encontra inovação digital.</p>
+    <a href="#cta" class="hero-cta">
+      Fazer Pedido
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </a>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- Experience Section -->
+<section class="experience" id="experience">
+  <div class="exp-bg-text">SABOR</div>
+  <div class="exp-container">
+    <div class="exp-section" data-exp="1">
+      <div class="exp-visual">
+        <div class="exp-visual-glow"></div>
+        <div class="exp-visual-inner">
+          <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80" alt="Ingredientes frescos">
+        </div>
+        <div class="exp-number">01</div>
+      </div>
+      <div class="exp-text">
+        <div class="exp-label">Seleção</div>
+        <h2 class="exp-title">Ingredientes <span>Selecionados</span></h2>
+        <p class="exp-desc">Cada ingrediente é cuidadosamente escolhido de fornecedores premium. Tomates San Marzano, mozzarella de búfala importada da Itália, e manjericão fresco colhido diariamente.</p>
+      </div>
+    </div>
+    <div class="exp-section" data-exp="2">
+      <div class="exp-visual">
+        <div class="exp-visual-glow"></div>
+        <div class="exp-visual-inner">
+          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80" alt="Forno à lenha">
+        </div>
+        <div class="exp-number">02</div>
+      </div>
+      <div class="exp-text">
+        <div class="exp-label">Tradição</div>
+        <h2 class="exp-title">Forno à <span>Lenha</span></h2>
+        <p class="exp-desc">Nosso forno de pedra vulcânica atinge 450°C, cozinhando cada pizza em apenas 90 segundos. O resultado? Uma crosta crocante por fora e macia por dentro.</p>
+      </div>
+    </div>
+    <div class="exp-section" data-exp="3">
+      <div class="exp-visual">
+        <div class="exp-visual-glow"></div>
+        <div class="exp-visual-inner">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80" alt="Sabor incomparável">
+        </div>
+        <div class="exp-number">03</div>
+      </div>
+      <div class="exp-text">
+        <div class="exp-label">Perfeição</div>
+        <h2 class="exp-title">Sabor <span>Incomparável</span></h2>
+        <p class="exp-desc">A combinação perfeita de texturas e sabores que despertam todos os sentidos. Uma experiência que vai além do paladar — é pura emoção gastronômica.</p>
+      </div>
+    </div>
+  </div>
+  <div class="floating-ingredients" id="floating-ingredients"></div>
+</section>
+
+<!-- Menu Section -->
+<section class="menu" id="menu">
+  <div class="menu-header">
+    <div class="menu-label">Nosso Cardápio</div>
+    <h2 class="menu-title">Sabores que Encantam</h2>
+    <p class="menu-subtitle">Cada pizza é uma obra-prima criada com paixão e técnica</p>
+  </div>
+  <div class="menu-grid">
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=600&q=80" alt="Margherita Futura">
+        <div class="menu-card-badge">MAIS VENDIDA</div>
+      </div>
+      <h3 class="menu-card-name">Margherita Futura</h3>
+      <p class="menu-card-desc">Molho de tomate artesanal, mozzarella de búfala, manjericão fresco e um toque de azeite extra virgem.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 52</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&q=80" alt="Pepperoni Supreme">
+        <div class="menu-card-badge">PREMIUM</div>
+      </div>
+      <h3 class="menu-card-name">Pepperoni Supreme</h3>
+      <p class="menu-card-desc">Pepperoni artesanal curado, queijo provolone, pimentão assado e molho picante especial da casa.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 64</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1574126154517-d1e0d89e7344?w=600&q=80" alt="Quattro Formaggi">
+        <div class="menu-card-badge">GOURMET</div>
+      </div>
+      <h3 class="menu-card-name">Quattro Formaggi</h3>
+      <p class="menu-card-desc">Blend exclusivo de mozzarella, gorgonzola, parmesão e provolone com mel trufado e nozes.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 68</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Diavola">
+        <div class="menu-card-badge">PICANTE</div>
+      </div>
+      <h3 class="menu-card-name">Diavola Ardente</h3>
+      <p class="menu-card-desc">Salame picante, pimenta calabresa, jalapeño fresco e queijo mozzarella com molho de tomate apimentado.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 58</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=600&q=80" alt="Prosciutto">
+        <div class="menu-card-badge">CLÁSSICA</div>
+      </div>
+      <h3 class="menu-card-name">Prosciutto & Rúcula</h3>
+      <p class="menu-card-desc">Prosciutto di Parma fatiado na hora, rúcula orgânica, lascas de parmesão e redução de balsâmico.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 72</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+    <div class="menu-card" data-tilt>
+      <div class="menu-card-img">
+        <img src="https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600&q=80" alt="Trufada">
+        <div class="menu-card-badge">EXCLUSIVA</div>
+      </div>
+      <h3 class="menu-card-name">Trufada Negra</h3>
+      <p class="menu-card-desc">Creme de trufa negra, cogumelos selvagens, mozzarella bufala e lascas de trufa fresca.</p>
+      <div class="menu-card-footer">
+        <span class="menu-card-price">R$ 88</span>
+        <button class="menu-card-btn">Adicionar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Process Section -->
+<section class="process" id="process">
+  <div class="process-header">
+    <div class="process-label">Nosso Processo</div>
+    <h2 class="process-title">Como Fazemos</h2>
+    <p class="process-subtitle">Da massa à mesa, cada etapa é uma celebração da arte da pizza</p>
+  </div>
+  <div class="process-timeline">
+    <div class="process-step" data-step="1">
+      <div class="process-step-visual">
+        <div class="process-step-visual-glow"></div>
+        <div class="process-step-number">1</div>
+        <div class="process-step-visual-inner">
+          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80" alt="Massa artesanal">
+        </div>
+      </div>
+      <div class="process-step-text">
+        <h3 class="process-step-title">Massa Artesanal</h3>
+        <p class="process-step-desc">Fermentação lenta de 72 horas com farinha italiana tipo 00. A massa descansa em temperatura controlada, desenvolvendo sabores complexos e uma textura única.</p>
+        <span class="process-step-tag">72H FERMENTAÇÃO</span>
+      </div>
+    </div>
+    <div class="process-step" data-step="2">
+      <div class="process-step-visual">
+        <div class="process-step-visual-glow"></div>
+        <div class="process-step-number">2</div>
+        <div class="process-step-visual-inner">
+          <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=80" alt="Ingredientes frescos">
+        </div>
+      </div>
+      <div class="process-step-text">
+        <h3 class="process-step-title">Ingredientes Frescos</h3>
+        <p class="process-step-desc">Cada ingrediente é preparado na hora. Tomates San Marzano triturados à mão, mozzarella de búfala fatiada fresca, e ervas aromáticas colhidas diariamente.</p>
+        <span class="process-step-tag">FRESH DAILY</span>
+      </div>
+    </div>
+    <div class="process-step" data-step="3">
+      <div class="process-step-visual">
+        <div class="process-step-visual-glow"></div>
+        <div class="process-step-number">3</div>
+        <div class="process-step-visual-inner">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Forno à lenha">
+        </div>
+      </div>
+      <div class="process-step-text">
+        <h3 class="process-step-title">Forno à Lenha</h3>
+        <p class="process-step-desc">Nosso forno de pedra vulcânica alcança 450°C, cozinhando cada pizza em exatos 90 segundos. A crosta fica crocante e o interior permanece suculento.</p>
+        <span class="process-step-tag">450°C · 90 SEGUNDOS</span>
+      </div>
+    </div>
+    <div class="process-step" data-step="4">
+      <div class="process-step-visual">
+        <div class="process-step-visual-glow"></div>
+        <div class="process-step-number">4</div>
+        <div class="process-step-visual-inner">
+          <img src="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=600&q=80" alt="Entrega perfeita">
+        </div>
+      </div>
+      <div class="process-step-text">
+        <h3 class="process-step-title">Entrega Perfeita</h3>
+        <p class="process-step-desc">Embalagens térmicas de alta tecnologia mantêm a pizza na temperatura ideal por até 45 minutos. Chega quente, crocante e perfeita.</p>
+        <span class="process-step-tag">45 MIN GARANTIDO</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Gallery Section -->
+<section class="gallery" id="gallery">
+  <div class="gallery-header">
+    <div class="gallery-label">Galeria</div>
+    <h2 class="gallery-title">Nossas Obras de Arte</h2>
+    <p class="gallery-subtitle">Cada pizza é uma pintura comestível</p>
+  </div>
+  <div class="gallery-carousel" id="gallery-carousel">
+    <div class="gallery-track" id="gallery-track">
+      <div class="gallery-item" data-index="0">
+        <img src="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500&q=80" alt="Pizza 1">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Margherita Clássica</div>
+          <div class="gallery-item-desc">A perfeição na simplicidade</div>
+        </div>
+      </div>
+      <div class="gallery-item" data-index="1">
+        <img src="https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500&q=80" alt="Pizza 2">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Pepperoni Supreme</div>
+          <div class="gallery-item-desc">Intensidade em cada fatia</div>
+        </div>
+      </div>
+      <div class="gallery-item" data-index="2">
+        <img src="https://images.unsplash.com/photo-1574126154517-d1e0d89e7344?w=500&q=80" alt="Pizza 3">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Quattro Formaggi</div>
+          <div class="gallery-item-desc">O paraíso dos queijos</div>
+        </div>
+      </div>
+      <div class="gallery-item" data-index="3">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80" alt="Pizza 4">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Diavola Ardente</div>
+          <div class="gallery-item-desc">Para os amantes do picante</div>
+        </div>
+      </div>
+      <div class="gallery-item" data-index="4">
+        <img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=500&q=80" alt="Pizza 5">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Prosciutto & Rúcula</div>
+          <div class="gallery-item-desc">Elegância italiana</div>
+        </div>
+      </div>
+      <div class="gallery-item" data-index="5">
+        <img src="https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=500&q=80" alt="Pizza 6">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-name">Trufada Negra</div>
+          <div class="gallery-item-desc">Luxo em cada mordida</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gallery-nav">
+    <button class="gallery-nav-btn" id="gallery-prev">❮</button>
+    <button class="gallery-nav-btn" id="gallery-next">❯</button>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta" id="cta">
+  <canvas id="cta-canvas"></canvas>
+  <div class="cta-content">
+    <h2 class="cta-title">Peça Agora<br><span>Sua Pizza</span></h2>
+    <p class="cta-subtitle">Entrega rápida em toda a cidade. Sua pizza quentinha e crocante em até 30 minutos.</p>
+    <a href="tel:+5511999999999" class="cta-btn">
+      <span class="cta-btn-inner">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        Fazer Pedido
+      </span>
+    </a>
+    <div class="cta-phone">📞 (11) 99999-9999</div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">PIZZA<span>FUTURA</span></div>
+        <p>A melhor experiência gastronômica da cidade. Tradição italiana com inovação futurista.</p>
+        <div class="footer-social">
+          <a href="#">📘</a>
+          <a href="#">📸</a>
+          <a href="#">🐦</a>
+          <a href="#">▶️</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-col-title">Cardápio</h4>
+        <ul class="footer-links">
+          <li><a href="#">Pizzas Clássicas</a></li>
+          <li><a href="#">Pizzas Premium</a></li>
+          <li><a href="#">Pizzas Especiais</a></li>
+          <li><a href="#">Bebidas</a></li>
+          <li><a href="#">Sobremesas</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-col-title">Empresa</h4>
+        <ul class="footer-links">
+          <li><a href="#">Sobre Nós</a></li>
+          <li><a href="#">Nosso Time</a></li>
+          <li><a href="#">Carreiras</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-col-title">Suporte</h4>
+        <ul class="footer-links">
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Política de Entrega</a></li>
+          <li><a href="#">Termos de Uso</a></li>
+          <li><a href="#">Privacidade</a></li>
+          <li><a href="#">Ajuda</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Pizza Futura. Todos os direitos reservados.</p>
+      <p>Feito com <span class="footer-heart">❤</span> e muito queijo</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== LOADING =====
+const loadingScreen = document.getElementById('loading');
+const loadingBar = document.getElementById('loading-bar');
+let loadProgress = 0;
+const loadInterval = setInterval(() => {
+  loadProgress += Math.random() * 15;
+  if(loadProgress >= 100){loadProgress=100;clearInterval(loadInterval);setTimeout(()=>{loadingScreen.classList.add('hidden')},500)}
+  loadingBar.style.width = loadProgress + '%';
+}, 150);
+
+// ===== THREE.JS HERO =====
+const heroCanvas = document.getElementById('hero-canvas');
+const heroScene = new THREE.Scene();
+const heroCamera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, .1, 1000);
+const heroRenderer = new THREE.WebGLRenderer({canvas:heroCanvas,antialias:true,alpha:true});
+heroRenderer.setSize(window.innerWidth, window.innerHeight);
+heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+heroRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+heroRenderer.toneMappingExposure = 1.2;
+
+// Pizza geometry
+const pizzaGroup = new THREE.Group();
+heroScene.add(pizzaGroup);
+
+// Dough
+const doughGeo = new THREE.CylinderGeometry(2.2, 2.2, .15, 64);
+const doughMat = new THREE.MeshStandardMaterial({color:0xd4a574,roughness:.8,metalness:0});
+const dough = new THREE.Mesh(doughGeo, doughMat);
+pizzaGroup.add(dough);
+
+// Crust
+const crustGeo = new THREE.TorusGeometry(2.2, .25, 16, 64);
+const crustMat = new THREE.MeshStandardMaterial({color:0xc4956a,roughness:.9,metalness:0});
+const crust = new THREE.Mesh(crustGeo, crustMat);
+crust.rotation.x = Math.PI/2;
+crust.position.y = .08;
+pizzaGroup.add(crust);
+
+// Sauce
+const sauceGeo = new THREE.CylinderGeometry(2, 2, .02, 64);
+const sauceMat = new THREE.MeshStandardMaterial({color:0xcc2200,roughness:.6,metalness:.05});
+const sauce = new THREE.Mesh(sauceGeo, sauceMat);
+sauce.position.y = .1;
+pizzaGroup.add(sauce);
+
+// Cheese layer
+const cheeseGeo = new THREE.CylinderGeometry(1.9, 1.9, .03, 64);
+const cheeseMat = new THREE.MeshStandardMaterial({color:0xffeebb,roughness:.5,metalness:.1,emissive:0x332200,emissiveIntensity:.2});
+const cheese = new THREE.Mesh(cheeseGeo, cheeseMat);
+cheese.position.y = .12;
+pizzaGroup.add(cheese);
+
+// Pepperoni slices
+const pepGeo = new THREE.CylinderGeometry(.22, .22, .04, 16);
+const pepMat = new THREE.MeshStandardMaterial({color:0xaa1100,roughness:.4,metalness:.1,emissive:0x330000,emissiveIntensity:.3});
+const pepPositions = [[.8,.8],[-.6,1],[-1.2,-.3],[.3,-1],[1.3,-.6],[-.2,-.8],[.9,-.2],[-.9,.4],[.4,.5],[-.5,-.5],[1,.3],[-1.3,.7]];
+pepPositions.forEach(([x,z])=>{const pep=new THREE.Mesh(pepGeo,pepMat);pep.position.set(x,.18,z);pizzaGroup.add(pep)});
+
+// Basil leaves
+const basilGeo = new THREE.SphereGeometry(.08, 8, 8);
+basilGeo.scale(1,.3,.5);
+const basilMat = new THREE.MeshStandardMaterial({color:0x228822,roughness:.7,metalness:0});
+[[.5,.2],[-.3,.6],[.2,-.4],[-.7,-.2],[.6,-.5]].forEach(([x,z])=>{const b=new THREE.Mesh(basilGeo,basilMat);b.position.set(x,.2,z);b.rotation.y=Math.random()*Math.PI;pizzaGroup.add(b)});
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffaa77, .4);
+heroScene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffaa55, 1.5);
+dirLight.position.set(5, 8, 5);
+heroScene.add(dirLight);
+const pointLight1 = new THREE.PointLight(0xff3c00, 1, 20);
+pointLight1.position.set(3, 3, 3);
+heroScene.add(pointLight1);
+const pointLight2 = new THREE.PointLight(0xff7a00, .8, 20);
+pointLight2.position.set(-3, 2, -3);
+heroScene.add(pointLight2);
+const pointLight3 = new THREE.PointLight(0xffd700, .5, 15);
+pointLight3.position.set(0, 5, 0);
+heroScene.add(pointLight3);
+
+// Particles
+const particlesCount = 200;
+const particlesGeo = new THREE.BufferGeometry();
+const posArray = new Float32Array(particlesCount*3);
+for(let i=0;i<particlesCount*3;i++){posArray[i]=(Math.random()-.5)*15}
+particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+const particlesMat = new THREE.PointsMaterial({size:.03,color:0xff6600,transparent:true,opacity:.6,blending:THREE.AdditiveBlending});
+const particles = new THREE.Points(particlesGeo, particlesMat);
+heroScene.add(particles);
+
+heroCamera.position.set(0, 3, 5);
+heroCamera.lookAt(0, 0, 0);
+
+// Hero animation
+let heroScrollProgress = 0;
+function animateHero(){
+  requestAnimationFrame(animateHero);
+  const time = Date.now()*.001;
+  pizzaGroup.rotation.y += .003 + heroScrollProgress*.01;
+  pizzaGroup.position.y = Math.sin(time)*.1;
+  particles.rotation.y = time*.05;
+  particles.rotation.x = time*.02;
+  heroCamera.position.x = Math.sin(time*.3)*.5;
+  heroCamera.position.z = 5 - heroScrollProgress*2;
+  heroCamera.lookAt(0, 0, 0);
+  heroRenderer.render(heroScene, heroCamera);
+}
+animateHero();
+
+window.addEventListener('resize', ()=>{
+  heroCamera.aspect = window.innerWidth/window.innerHeight;
+  heroCamera.updateProjectionMatrix();
+  heroRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ===== THREE.JS CTA =====
+const ctaCanvas = document.getElementById('cta-canvas');
+const ctaScene = new THREE.Scene();
+const ctaCamera = new THREE.PerspectiveCamera(60, window.innerWidth/800, .1, 1000);
+const ctaRenderer = new THREE.WebGLRenderer({canvas:ctaCanvas,antialias:true,alpha:true});
+ctaRenderer.setSize(window.innerWidth, 800);
+ctaRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+// CTA particles
+const ctaParticlesCount = 150;
+const ctaParticlesGeo = new THREE.BufferGeometry();
+const ctaPosArray = new Float32Array(ctaParticlesCount*3);
+for(let i=0;i<ctaParticlesCount*3;i++){ctaPosArray[i]=(Math.random()-.5)*20}
+ctaParticlesGeo.setAttribute('position', new THREE.BufferAttribute(ctaPosArray, 3));
+const ctaParticlesMat = new THREE.PointsMaterial({size:.04,color:0xffaa00,transparent:true,opacity:.5,blending:THREE.AdditiveBlending});
+const ctaParticles = new THREE.Points(ctaParticlesGeo, ctaParticlesMat);
+ctaScene.add(ctaParticles);
+
+const ctaAmbient = new THREE.AmbientLight(0xffaa00, .3);
+ctaScene.add(ctaAmbient);
+const ctaPoint1 = new THREE.PointLight(0xff3c00, 1, 30);
+ctaPoint1.position.set(5, 5, 5);
+ctaScene.add(ctaPoint1);
+const ctaPoint2 = new THREE.PointLight(0xffd700, .8, 30);
+ctaPoint2.position.set(-5, 3, -5);
+ctaScene.add(ctaPoint2);
+
+ctaCamera.position.z = 8;
+
+function animateCTA(){
+  requestAnimationFrame(animateCTA);
+  const time = Date.now()*.001;
+  ctaParticles.rotation.y = time*.03;
+  ctaParticles.rotation.x = Math.sin(time*.5)*.1;
+  ctaPoint1.position.x = Math.sin(time)*5;
+  ctaPoint1.position.z = Math.cos(time)*5;
+  ctaRenderer.render(ctaScene, ctaCamera);
+}
+animateCTA();
+
+window.addEventListener('resize', ()=>{
+  ctaCamera.aspect = window.innerWidth/800;
+  ctaCamera.updateProjectionMatrix();
+  ctaRenderer.setSize(window.innerWidth, 800);
+});
+
+// ===== GSAP SCROLL ANIMATIONS =====
+gsap.registerPlugin(ScrollTrigger);
+
+// Nav scroll
+ScrollTrigger.create({
+  start: 'top -100',
+  onUpdate: (self)=>{
+    const nav = document.getElementById('nav');
+    if(self.direction===1 && self.scroll()>100){nav.classList.add('scrolled')}
+    else if(self.scroll()<100){nav.classList.remove('scrolled')}
+  }
+});
+
+// Hero scroll
+ScrollTrigger.create({
+  trigger: '#hero',
+  start: 'top top',
+  end: 'bottom top',
+  scrub: true,
+  onUpdate: (self)=>{heroScrollProgress = self.progress}
+});
+
+// Hero text entrance
+gsap.from('.hero-badge', {opacity:0, y:30, duration:1, delay:.5, ease:'power3.out'});
+gsap.from('.hero-title .line span', {opacity:0, y:80, duration:1.2, stagger:.2, delay:.8, ease:'power3.out'});
+gsap.from('.hero-subtitle', {opacity:0, y:30, duration:1, delay:1.5, ease:'power3.out'});
+gsap.from('.hero-cta', {opacity:0, y:30, duration:1, delay:1.8, ease:'power3.out'});
+
+// Experience sections
+const expSections = document.querySelectorAll('.exp-section');
+expSections.forEach((section, i)=>{
+  gsap.to(section, {
+    opacity:1, y:0, duration:1.2, ease:'power3.out',
+    scrollTrigger:{trigger:section, start:'top 80%', toggleActions:'play none none reverse'}
+  });
+  gsap.to(section.querySelector('.exp-visual-inner'), {
+    scale:1, opacity:1, duration:1.4, ease:'power3.out',
+    scrollTrigger:{trigger:section, start:'top 75%', toggleActions:'play none none reverse'}
+  });
+});
+
+// Menu cards
+const menuCards = document.querySelectorAll('.menu-card');
+menuCards.forEach((card, i)=>{
+  gsap.to(card, {
+    opacity:1, y:0, scale:1, duration:.8, delay:i*.1, ease:'power3.out',
+    scrollTrigger:{trigger:card, start:'top 85%', toggleActions:'play none none reverse'}
+  });
+});
+
+// Process steps
+const processSteps = document.querySelectorAll('.process-step');
+processSteps.forEach((step, i)=>{
+  gsap.to(step, {
+    opacity:1, y:0, duration:1, delay:i*.15, ease:'power3.out',
+    scrollTrigger:{trigger:step, start:'top 80%', toggleActions:'play none none reverse'}
+  });
+});
+
+// Gallery
+const galleryItems = document.querySelectorAll('.gallery-item');
+let currentGalleryIndex = 0;
+const totalGalleryItems = galleryItems.length;
+
+function updateGallery(){
+  galleryItems.forEach((item, i)=>{
+    const offset = i - currentGalleryIndex;
+    const absOffset = Math.abs(offset);
+    const z = -absOffset * 150;
+    const x = offset * 380;
+    const rotateY = offset * -15;
+    const scale = 1 - absOffset * .15;
+    const opacity = absOffset > 2 ? 0 : 1 - absOffset * .3;
+    gsap.to(item, {
+      x: x, z: z, rotateY: rotateY, scale: scale, opacity: opacity,
+      duration: .8, ease: 'power3.out'
+    });
+  });
+}
+updateGallery();
+
+document.getElementById('gallery-prev').addEventListener('click', ()=>{
+  currentGalleryIndex = (currentGalleryIndex - 1 + totalGalleryItems) % totalGalleryItems;
+  updateGallery();
+});
+document.getElementById('gallery-next').addEventListener('click', ()=>{
+  currentGalleryIndex = (currentGalleryIndex + 1) % totalGalleryItems;
+  updateGallery();
+});
+
+// CTA entrance
+gsap.from('.cta-title', {opacity:0, y:60, duration:1.2, ease:'power3.out',
+  scrollTrigger:{trigger:'.cta', start:'top 70%', toggleActions:'play none none reverse'}
+});
+gsap.from('.cta-subtitle', {opacity:0, y:40, duration:1, delay:.3, ease:'power3.out',
+  scrollTrigger:{trigger:'.cta', start:'top 70%', toggleActions:'play none none reverse'}
+});
+gsap.from('.cta-btn', {opacity:0, y:40, duration:1, delay:.5, ease:'power3.out',
+  scrollTrigger:{trigger:'.cta', start:'top 70%', toggleActions:'play none none reverse'}
+});
+gsap.from('.cta-phone', {opacity:0, y:30, duration:1, delay:.7, ease:'power3.out',
+  scrollTrigger:{trigger:'.cta', start:'top 70%', toggleActions:'play none none reverse'}
+});
+
+// ===== CARD TILT EFFECT =====
+document.querySelectorAll('[data-tilt]').forEach(card=>{
+  card.addEventListener('mousemove', (e)=>{
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width/2;
+    const centerY = rect.height/2;
+    const rotateX = (y - centerY)/20;
+    const rotateY = (centerX - x)/20;
+    card.style.setProperty('--mouse-x', (x/rect.width*100)+'%');
+    card.style.setProperty('--mouse-y', (y/rect.height*100)+'%');
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+  });
+  card.addEventListener('mouseleave', ()=>{
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+  });
+});
+
+// ===== FLOATING INGREDIENTS =====
+const ingredients = ['🧀','🍅','🌿','🍄','🫒','🧄','🌶️','🧅'];
+const floatContainer = document.getElementById('floating-ingredients');
+ingredients.forEach((emoji, i)=>{
+  const el = document.createElement('div');
+  el.className = 'float-item';
+  el.textContent = emoji;
+  el.style.left = Math.random()*90 + '%';
+  el.style.top = Math.random()*80 + 10 + '%';
+  el.style.animationDelay = i + 's';
+  el.style.animationDuration = (6 + Math.random()*4) + 's';
+  floatContainer.appendChild(el);
+});
+
+// ===== SMOOTH SCROLL =====
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{
+  anchor.addEventListener('click', function(e){
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if(target){
+      gsap.to(window, {duration:1.5, scrollTo:{y:target, offsetY:80}, ease:'power3.inOut'});
+    }
+  });
+});
+
+// ===== MENU BUTTON CLICK =====
+document.querySelectorAll('.menu-card-btn').forEach(btn=>{
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    const original = this.textContent;
+    this.textContent = '✓ Adicionado';
+    this.style.background = '#22aa44';
+    setTimeout(()=>{this.textContent=original;this.style.background='';},2000);
+  });
+});
+
+// ===== PARALLAX ON SCROLL =====
+window.addEventListener('scroll', ()=>{
+  const scrolled = window.scrollY;
+  document.querySelectorAll('.exp-bg-text').forEach(el=>{
+    el.style.transform = `translate(-50%, calc(-50% + ${scrolled*.1}px))`;
+  });
+});
+
+// ===== MOUSE PARALLAX FOR HERO =====
+document.addEventListener('mousemove', (e)=>{
+  const x = (e.clientX/window.innerWidth - .5)*2;
+  const y = (e.clientY/window.innerHeight - .5)*2;
+  gsap.to(pizzaGroup.rotation, {x:y*.1, z:-x*.05, duration:1, ease:'power2.out'});
+});
+</script>
+</body>
+</html>
